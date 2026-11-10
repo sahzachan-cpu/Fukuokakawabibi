@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="zh-HK" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>HKG ✈ FUK Travel Planner 2027 | 福岡旅行行程助手</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chiron+Hei+HK:wght@400;600;700&family=LINE+Seed+JP:wght@400;700&family=Merriweather:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        jpBg: '#000000',
+                        jpPrimary: '#FFFFFF',
+                        jpSecondary: '#C0C0C0',
+                        jpAccentGreen: '#39FF14',
+                        jpAccentPink: '#FF4FA3',
+                        glassBg: 'rgba(255, 255, 255, 0.05)',
+                        glassBorder: 'rgba(255, 255, 255, 0.12)',
+                        glassCard: 'rgba(20, 20, 22, 0.75)',
+                    },
+                    fontFamily: {
+                        chinese: ['"Chiron Hei HK"', 'sans-serif'],
+                        english: ['Merriweather', 'serif'],
+                        japanese: ['"LINE Seed JP"', 'sans-serif'],
+                        sans: ['"Plus Jakarta Sans"', '"LINE Seed JP"', '"Chiron Hei HK"', 'sans-serif']
+                    },
+                    borderRadius: {
+                        '3xl': '24px',
+                        '4xl': '32px'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome & SortableJS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+    <!-- Firebase SDK Module Setup -->
+    <script type="module">
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        window.FirebaseModule = {
+            initializeApp,
+            getApps,
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged,
+            getFirestore,
+            doc,
+            setDoc,
+            onSnapshot,
+            collection
+        };
+    </script>
+
+    <style>
+        body {
+            background-color: #000000;
+            color: #FFFFFF;
+            font-family: 'Plus Jakarta Sans', 'LINE Seed JP', 'Chiron Hei HK', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(22, 22, 26, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(30, 30, 35, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+
+        .glass-modal {
+            background: rgba(15, 15, 18, 0.9);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .sortable-ghost {
+            opacity: 0.3;
+            background: rgba(57, 255, 20, 0.1) !important;
+            border: 1px dashed #39FF14 !important;
+        }
+    </style>
+</head>
+<body class="flex justify-center min-h-screen bg-black text-white antialiased">
+
+    <!-- Mobile Screen Wrapper (Max 480px, Centered) -->
+    <div id="app-container" class="w-full max-w-[480px] min-h-screen flex flex-col bg-black relative pb-28 border-x border-neutral-900 shadow-2xl">
+        
+        <!-- HEADER -->
+        <header class="sticky top-0 z-40 glass-panel px-5 py-4 flex justify-between items-center border-b border-white/10">
+            <div>
+                <div class="flex items-center space-x-2">
+                    <span id="header-booking-ref" class="text-[10px] font-bold uppercase tracking-widest text-jpAccentGreen bg-jpAccentGreen/10 px-2 py-0.5 rounded-full border border-jpAccentGreen/30">REF: P8T3GZ</span>
+                    <span id="sync-status-dot" class="inline-block w-2 h-2 rounded-full bg-jpAccentGreen animate-pulse" title="Live Sync Active"></span>
+                    <span id="sync-status-text" class="text-[9px] font-mono text-jpAccentGreen uppercase">LIVE</span>
+                </div>
+                <div class="flex items-center space-x-2 mt-0.5">
+                    <h1 id="header-trip-title" class="text-lg font-bold font-english tracking-wide text-white">HKG <i class="fa-solid font-sans text-xs text-jpSecondary mx-1">✈</i> FUK</h1>
+                    <button onclick="openTripEditModal()" class="text-jpSecondary hover:text-jpAccentGreen text-xs p-1 transition-colors" title="編輯行程資料">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3 text-right">
+                <div>
+                    <span id="header-date-range" class="text-[11px] text-jpSecondary block font-mono">2027/01/07 - 01/11</span>
+                    <span id="header-weather-pill" class="text-xs font-semibold text-jpAccentPink inline-flex items-center gap-1">
+                        <i class="fa-solid fa-cloud-sun"></i> Fukuoka --°C
+                    </span>
+                </div>
+                <button onclick="openProfileModal()" class="relative group active:scale-95 transition-transform" title="旅人設定">
+                    <div class="w-9 h-9 rounded-full p-0.5 bg-gradient-to-tr from-jpAccentGreen to-jpAccentPink">
+                        <img id="header-avatar-img" src="https://placehold.co/100x100/1e1e23/FFFFFF?text=FUK" class="w-full h-full rounded-full object-cover bg-black" alt="Profile">
+                    </div>
+                    <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-jpAccentGreen border-2 border-black rounded-full"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN APP CONTENT -->
+        <main class="flex-1 px-4 pt-4">
+
+            <!-- PAGE 1: SCHEDULE -->
+            <section id="tab-schedule" class="tab-content active space-y-4">
+                <!-- Flight Ticket Card -->
+                <div class="glass-card rounded-3xl p-4 relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 text-white/5 text-8xl font-black select-none pointer-events-none">UO</div>
+                    <div class="flex justify-between items-center text-xs text-jpSecondary mb-2 font-mono">
+                        <span id="card-outbound-code">OUTBOUND: UO668</span>
+                        <span id="card-inbound-code">INBOUND: UO601</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm bg-black/40 p-3 rounded-2xl border border-white/5">
+                        <div class="border-r border-white/10 pr-2">
+                            <div id="card-outbound-date" class="text-[10px] text-jpAccentGreen uppercase font-bold">7 JAN 2027</div>
+                            <div id="card-outbound-time" class="font-bold text-base">11:05 <span class="text-xs font-normal text-jpSecondary">HKG</span></div>
+                            <div id="card-outbound-arr" class="text-xs text-jpSecondary">➔ 15:10 FUK</div>
+                        </div>
+                        <div class="pl-2">
+                            <div id="card-inbound-date" class="text-[10px] text-jpAccentPink uppercase font-bold">11 JAN 2027</div>
+                            <div id="card-inbound-time" class="font-bold text-base">12:50 <span class="text-xs font-normal text-jpSecondary">FUK</span></div>
+                            <div id="card-inbound-arr" class="text-xs text-jpSecondary">➔ 15:50 HKG</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Day Switcher Horizontal Scroll Bar -->
+                <div class="flex space-x-2 overflow-x-auto no-scrollbar py-1 text-sm">
+                    <button onclick="switchDay(1)" id="day-btn-1" class="day-btn flex-1 min-w-[75px] py-2.5 px-3 rounded-2xl glass-card text-center transition-all border border-jpAccentGreen text-jpAccentGreen font-bold">
+                        <div class="text-[10px] uppercase opacity-70">Day 1</div>
+                        <div class="text-xs font-bold">Jan 7</div>
+                    </button>
+                    <button onclick="switchDay(2)" id="day-btn-2" class="day-btn flex-1 min-w-[75px] py-2.5 px-3 rounded-2xl glass-card text-center transition-all opacity-60 hover:opacity-100">
+                        <div class="text-[10px] uppercase opacity-70">Day 2</div>
+                        <div class="text-xs font-bold">Jan 8</div>
+                    </button>
+                    <button onclick="switchDay(3)" id="day-btn-3" class="day-btn flex-1 min-w-[75px] py-2.5 px-3 rounded-2xl glass-card text-center transition-all opacity-60 hover:opacity-100">
+                        <div class="text-[10px] uppercase opacity-70">Day 3</div>
+                        <div class="text-xs font-bold">Jan 9</div>
+                    </button>
+                    <button onclick="switchDay(4)" id="day-btn-4" class="day-btn flex-1 min-w-[75px] py-2.5 px-3 rounded-2xl glass-card text-center transition-all opacity-60 hover:opacity-100">
+                        <div class="text-[10px] uppercase opacity-70">Day 4</div>
+                        <div class="text-xs font-bold">Jan 10</div>
+                    </button>
+                    <button onclick="switchDay(5)" id="day-btn-5" class="day-btn flex-1 min-w-[75px] py-2.5 px-3 rounded-2xl glass-card text-center transition-all opacity-60 hover:opacity-100">
+                        <div class="text-[10px] uppercase opacity-70">Day 5</div>
+                        <div class="text-xs font-bold">Jan 11</div>
+                    </button>
+                </div>
+
+                <!-- NEW: Dynamic Nearby Wishlist Suggestions Accordion / Dropdown -->
+                <div class="glass-card rounded-3xl p-3 border border-jpAccentPink/30 space-y-2">
+                    <button onclick="toggleNearbyDropdown()" class="w-full flex justify-between items-center text-xs font-bold text-jpAccentPink px-1">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-heart-circle-plus text-sm"></i>
+                            <span>同區 / 附近心水地點推薦 (Wishlist Suggestions)</span>
+                        </span>
+                        <i id="nearby-toggle-icon" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                    </button>
+                    <div id="nearby-wishlist-dropdown" class="hidden pt-2 border-t border-white/10 space-y-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center text-xs text-jpSecondary px-1">
+                    <span id="current-day-label"><i class="fa-solid fa-calendar-day mr-1 text-jpAccentGreen"></i> Day 1 行程明細</span>
+                    <span class="text-[10px] opacity-60"><i class="fa-solid fa-grip-vertical mr-1"></i> 長按拖拽排序</span>
+                </div>
+
+                <!-- Timeline Container -->
+                <div id="timeline-container" class="space-y-3 pb-8"></div>
+            </section>
+
+            <!-- PAGE 2: WISHLIST -->
+            <section id="tab-wishlist" class="tab-content space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-bold font-english">Wishlist</h2>
+                        <p class="text-xs text-jpSecondary">景點美食心水清單 (按地區分組)</p>
+                    </div>
+                    <button onclick="openWishlistModal()" class="w-10 h-10 rounded-2xl bg-jpAccentGreen/20 border border-jpAccentGreen/50 text-jpAccentGreen flex items-center justify-center active:scale-95 transition-transform">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <div id="wishlist-grouped-container" class="space-y-6"></div>
+            </section>
+
+            <!-- PAGE 3: HOTEL -->
+            <section id="tab-hotel" class="tab-content space-y-4">
+                <div class="glass-card rounded-3xl p-5 border border-white/10 space-y-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 bg-jpAccentGreen/10 border border-jpAccentGreen/30 text-jpAccentGreen rounded-full font-bold">Hotel Confirmation</span>
+                            <h2 id="hotel-tab-name" class="text-xl font-bold mt-2 text-white">Mitsui Garden Hotel Fukuoka Nakasu</h2>
+                            <p id="hotel-tab-subname" class="text-xs text-jpSecondary mt-0.5">三井ガーデンホテル福岡中洲</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 py-3 border-y border-white/10 text-xs">
+                        <div>
+                            <span class="text-jpSecondary block text-[10px]">BOOKING REF</span>
+                            <span id="hotel-tab-ref" class="font-mono text-base font-bold text-jpAccentPink">P8T3GZ</span>
+                        </div>
+                        <div>
+                            <span class="text-jpSecondary block text-[10px]">PHONE</span>
+                            <span id="hotel-tab-phone" class="font-mono text-xs text-white">+81 92-263-5531</span>
+                        </div>
+                        <div>
+                            <span class="text-jpSecondary block text-[10px]">CHECK-IN</span>
+                            <span id="hotel-tab-checkin" class="font-bold text-white">7 Jan 2027 (15:00)</span>
+                        </div>
+                        <div>
+                            <span class="text-jpSecondary block text-[10px]">CHECK-OUT</span>
+                            <span id="hotel-tab-checkout" class="font-bold text-white">11 Jan 2027 (11:00)</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="text-jpSecondary block text-[10px] mb-1">ADDRESS</span>
+                        <p id="hotel-tab-address" class="text-xs text-white leading-relaxed">5-5-1 Nakasu, Hakata-ku, Fukuoka 810-0801 Japan</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <a id="hotel-tab-map-link" href="https://www.google.com/maps/search/?api=1&query=Mitsui+Garden+Hotel+Fukuoka+Nakasu" target="_blank" class="flex-1 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-xs font-semibold flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-map-location-dot text-jpAccentGreen"></i> Google Maps
+                        </a>
+                        <a id="hotel-tab-phone-link" href="tel:+81922635531" class="py-3 px-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-xs flex items-center justify-center">
+                            <i class="fa-solid fa-phone text-jpAccentPink"></i>
+                        </a>
+                        <button id="hotel-tab-copy-btn" onclick="copyToClipboard('5-5-1 Nakasu, Hakata-ku, Fukuoka')" class="py-3 px-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-xs flex items-center justify-center">
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-3xl p-5 border border-white/10 space-y-3">
+                    <h3 class="text-xs font-bold text-jpSecondary uppercase tracking-wider">Hotel Notes & Amenities</h3>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="p-3 bg-black/40 rounded-2xl border border-white/5 flex items-center gap-2">
+                            <i class="fa-solid fa-hot-tub-person text-jpAccentPink text-base"></i>
+                            <span>大浴場 (Onsen Bath)</span>
+                        </div>
+                        <div class="p-3 bg-black/40 rounded-2xl border border-white/5 flex items-center gap-2">
+                            <i class="fa-solid fa-wifi text-jpAccentGreen text-base"></i>
+                            <span>免費 Wi-Fi</span>
+                        </div>
+                        <div class="p-3 bg-black/40 rounded-2xl border border-white/5 flex items-center gap-2">
+                            <i class="fa-solid fa-train-subway text-jpAccentGreen text-base"></i>
+                            <span>中洲川端站步行2分鐘</span>
+                        </div>
+                        <div class="p-3 bg-black/40 rounded-2xl border border-white/5 flex items-center gap-2">
+                            <i class="fa-solid fa-utensils text-jpAccentPink text-base"></i>
+                            <span>福岡特色自助早餐</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PAGE 4: WEATHER -->
+            <section id="tab-weather" class="tab-content space-y-4">
+                <div class="glass-card rounded-3xl p-5 border border-white/10 text-center relative overflow-hidden">
+                    <div class="text-[10px] text-jpAccentGreen font-semibold uppercase tracking-widest mb-1">Live Weather (Open-Meteo API)</div>
+                    <h2 class="text-2xl font-bold font-english">Fukuoka Weather</h2>
+                    <p class="text-xs text-jpSecondary">福岡市即時氣象資訊</p>
+
+                    <div id="weather-current-box" class="my-6">
+                        <div class="animate-pulse text-sm text-jpSecondary">載入即時天氣數據中...</div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-3xl p-5 border border-white/10">
+                    <h3 class="text-xs font-bold text-jpSecondary mb-3 uppercase tracking-wider">7-Day Daily Forecast</h3>
+                    <div id="weather-forecast-list" class="space-y-2"></div>
+                </div>
+            </section>
+
+            <!-- PAGE 5: EXPENSE -->
+            <section id="tab-expense" class="tab-content space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-bold font-english">Expense Tracker</h2>
+                        <p class="text-xs text-jpSecondary">旅程記帳與單據備份</p>
+                    </div>
+                    <button onclick="openExpenseModal()" class="w-10 h-10 rounded-2xl bg-jpAccentGreen/20 border border-jpAccentGreen/50 text-jpAccentGreen flex items-center justify-center active:scale-95 transition-transform">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+
+                <!-- Total Summary -->
+                <div class="glass-card rounded-3xl p-5 border border-white/10 grid grid-cols-2 gap-3 text-center">
+                    <div class="p-3 bg-black/50 rounded-2xl border border-white/5">
+                        <span class="text-[10px] text-jpSecondary uppercase block">Total HKD</span>
+                        <span id="expense-total-hkd" class="text-lg font-bold text-jpAccentGreen font-mono">HK$ 0</span>
+                    </div>
+                    <div class="p-3 bg-black/50 rounded-2xl border border-white/5">
+                        <span class="text-[10px] text-jpSecondary uppercase block">Total JPY</span>
+                        <span id="expense-total-jpy" class="text-lg font-bold text-jpAccentPink font-mono">¥ 0</span>
+                    </div>
+                    <div class="col-span-2 text-[10px] text-jpSecondary text-center pt-1">
+                        * 參考匯率: 1 HKD ≈ 19.5 JPY
+                    </div>
+                </div>
+
+                <div id="expense-list-container" class="space-y-3"></div>
+            </section>
+
+            <!-- PAGE 6: TO BUY -->
+            <section id="tab-tobuy" class="tab-content space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-bold font-english">To Buy List</h2>
+                        <p class="text-xs text-jpSecondary">購物與手信清單 (支援相片及勾選)</p>
+                    </div>
+                    <button onclick="openToBuyModal()" class="w-10 h-10 rounded-2xl bg-jpAccentPink/20 border border-jpAccentPink/50 text-jpAccentPink flex items-center justify-center active:scale-95 transition-transform">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+
+                <div id="tobuy-list-container" class="space-y-3"></div>
+            </section>
+
+            <!-- PAGE 7: SETTINGS -->
+            <section id="tab-settings" class="tab-content space-y-4">
+                <div>
+                    <h2 class="text-xl font-bold font-english">Settings & Live Sync</h2>
+                    <p class="text-xs text-jpSecondary">雲端多人實時同步與數據管理</p>
+                </div>
+
+                <!-- Profile Card inside Settings -->
+                <div class="glass-card rounded-3xl p-5 border border-white/10 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-jpAccentGreen to-jpAccentPink relative">
+                            <img id="settings-avatar-img" src="https://placehold.co/100x100/1e1e23/FFFFFF?text=FUK" class="w-full h-full rounded-full object-cover bg-black" alt="Profile">
+                        </div>
+                        <div>
+                            <h3 id="settings-user-name" class="text-sm font-bold text-white">Alex (Traveler)</h3>
+                            <p id="settings-user-status" class="text-xs text-jpAccentGreen font-mono">Exploring Fukuoka 🍜</p>
+                        </div>
+                    </div>
+                    <button onclick="openProfileModal()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-2xl text-xs font-semibold text-white">
+                        <i class="fa-solid fa-user-pen mr-1"></i> 編輯頭像
+                    </button>
+                </div>
+
+                <!-- Shared Room & Realtime Firebase Status -->
+                <div class="glass-card rounded-3xl p-5 border border-white/10 space-y-3">
+                    <h3 class="text-xs font-bold text-jpSecondary uppercase tracking-wider">多人同步與 PWA 設定 (Room & PWA)</h3>
+                    <div>
+                        <label class="text-[10px] text-jpSecondary block mb-1">TRIP ROOM CODE (房間號碼)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="input-room-code" uppercase class="flex-1 bg-black/60 border border-white/20 rounded-2xl px-3 py-2 text-white font-mono text-xs uppercase" placeholder="FUK-2027">
+                            <button onclick="changeRoomCode()" class="px-4 py-2 bg-jpAccentGreen text-black font-bold text-xs rounded-2xl">切換房間</button>
+                        </div>
+                    </div>
+                    <button onclick="shareTripLink()" class="w-full py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-xs font-semibold flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-share-nodes text-jpAccentGreen"></i> 複製 iPhone 主畫面/同行友人同步連結
+                    </button>
+                    <div class="p-3 bg-black/40 rounded-2xl border border-white/5 text-[10px] text-jpSecondary leading-relaxed">
+                        <i class="fa-solid fa-mobile-screen-button text-jpAccentPink mr-1"></i> <strong>加入 iPhone 主畫面 (Add to Home Screen):</strong><br>
+                        點擊 Safari 下方「分享」按鈕 ➔ 選擇「加至主畫面」。大家只需使用相同的 Room Code 或開啟此分享連結加至主畫面，即可以像 Native App 般離線編輯與自動實時同步！
+                    </div>
+                </div>
+
+                <!-- Backup & Reset -->
+                <div class="glass-card rounded-3xl p-5 border border-white/10 space-y-3">
+                    <h3 class="text-xs font-bold text-jpSecondary uppercase tracking-wider">數據備份與重置</h3>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <button onclick="exportData()" class="p-3 bg-white/10 rounded-2xl text-center hover:bg-white/20 border border-white/10">
+                            <i class="fa-solid fa-download block text-base mb-1 text-jpAccentGreen"></i> 匯出 JSON
+                        </button>
+                        <label class="p-3 bg-white/10 rounded-2xl text-center hover:bg-white/20 border border-white/10 cursor-pointer block">
+                            <i class="fa-solid fa-upload block text-base mb-1 text-jpAccentPink"></i> 匯入 JSON
+                            <input type="file" accept=".json" onchange="importData(event)" class="hidden">
+                        </label>
+                    </div>
+                    <button onclick="resetData()" class="w-full py-2.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded-2xl text-xs font-semibold">
+                        重置所有行程數據
+                    </button>
+                </div>
+
+                <!-- NEW: Background & Glass Transparency Settings -->
+                <div class="glass-card rounded-3xl p-5 border border-white/10 space-y-3">
+                    <h3 class="text-xs font-bold text-jpSecondary uppercase tracking-wider">外觀與透明度設定 (Appearance & Theme)</h3>
+                    <div>
+                        <label class="text-[10px] text-jpSecondary block mb-1">背景顏色主題 (Background Theme)</label>
+                        <div class="grid grid-cols-5 gap-2 pt-1">
+                            <button onclick="setThemeBackground('#000000', 'dark')" class="h-9 rounded-xl bg-black border-2 border-white/30 flex items-center justify-center text-[10px] text-white font-bold" title="極黑">黑</button>
+                            <button onclick="setThemeBackground('#0B0F19', 'dark')" class="h-9 rounded-xl bg-[#0B0F19] border-2 border-blue-500/30 flex items-center justify-center text-[10px] text-blue-300 font-bold" title="深藍">藍</button>
+                            <button onclick="setThemeBackground('#121216', 'dark')" class="h-9 rounded-xl bg-[#121216] border-2 border-neutral-700 flex items-center justify-center text-[10px] text-neutral-300 font-bold" title="深灰">灰</button>
+                            <button onclick="setThemeBackground('#1A1A1E', 'dark')" class="h-9 rounded-xl bg-[#1A1A1E] border-2 border-neutral-600 flex items-center justify-center text-[10px] text-neutral-200 font-bold" title="炭黑">炭</button>
+                            <button onclick="setThemeBackground('#F8FAFC', 'light')" class="h-9 rounded-xl bg-[#F8FAFC] border-2 border-neutral-300 flex items-center justify-center text-[10px] text-neutral-800 font-bold" title="純白">白</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-jpSecondary block mb-1">上傳 iPhone 相冊自定義桌布 (Custom Wallpaper)</label>
+                        <label class="w-full py-2.5 px-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer text-jpAccentGreen">
+                            <i class="fa-solid fa-image"></i> 從相機膠卷選擇桌布相片
+                            <input type="file" accept="image/*" onchange="uploadCustomWallpaper(event)" class="hidden">
+                        </label>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center text-[10px] text-jpSecondary mb-1">
+                            <span>玻璃擬態透明度 (Glass Opacity)</span>
+                            <span id="opacity-val-label">75%</span>
+                        </div>
+                        <input type="range" id="opacity-slider" min="30" max="95" value="75" oninput="updateGlassOpacity(this.value)" class="w-full accent-jpAccentGreen cursor-pointer">
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FLOATING ADD BUTTON (FOR SCHEDULE) -->
+        <button id="schedule-fab" onclick="openActivityModal()" class="fixed bottom-24 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-tr from-jpAccentGreen to-emerald-400 text-black font-black text-2xl flex items-center justify-center shadow-2xl active:scale-90 transition-transform">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+
+        <!-- NATIVE MOBILE BOTTOM NAVIGATION BAR -->
+        <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-40 glass-panel border-t border-white/10 px-2 py-2 flex justify-around items-center">
+            <button onclick="switchTab('schedule')" id="nav-schedule" class="nav-btn flex flex-col items-center text-jpAccentGreen py-1 px-2">
+                <i class="fa-solid fa-calendar-days text-lg"></i>
+                <span class="text-[9px] font-medium mt-0.5">Schedule</span>
+            </button>
+            <button onclick="switchTab('wishlist')" id="nav-wishlist" class="nav-btn flex flex-col items-center text-jpSecondary py-1 px-2">
+                <i class="fa-solid fa-heart text-lg"></i>
+                <span class="text-[9px] font-medium mt-0.5">Wishlist</span>
+            </button>
+            <button onclick="switchTab('hotel')" id="nav-hotel" class="nav-btn flex flex-col items-center text-jpSecondary py-1 px-2">
+                <i class="fa-solid fa-hotel text-lg"></i>
+                <span class="text-[9px] font-medium mt-0.5">Hotel</span>
+            </button>
+            <button onclick="switchTab('weather')" id="nav-weather" class="nav-btn flex flex-col items-center text-jpSecondary py-1 px-2">
+                <i class="fa-solid fa-cloud-sun text-lg"></i>
+                <span class="text-[9px] font-medium mt-0.5">Weather</span>
+            </button>
+            <button onclick="switchTab('expense')" id="nav-expense" class="nav-btn flex flex-col items-center text-jpSecondary py-1 px-2">
+                <i class="fa-solid fa-wallet text-lg"></i>
+                <span class="text-[9px] font-medium mt-0.5">Expense</span>
+            </button>
+            <button onclick="switchTab('tobuy')" id="nav-tobuy" class="nav-btn flex flex-col items-center text-jpSecondary py-1 px-2">
+                <i class="fa-solid fa-bag-shopping text-lg"></i>
+                <span class="text-[9px] font-medium mt-0.5">To Buy</span>
+            </button>
+            <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center text-jpSecondary py-1 px-2">
+                <i class="fa-solid fa-gear text-lg"></i>
+                <span class="text-[9px] font-medium mt-0.5">Settings</span>
+            </button>
+        </nav>
+
+        <!-- ADD / EDIT ACTIVITY MODAL -->
+        <div id="activity-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+            <div class="glass-modal w-full max-w-[420px] rounded-3xl p-5 border border-white/20 space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar">
+                <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                    <h3 id="modal-activity-title" class="text-lg font-bold font-english text-white">新增行程活動</h3>
+                    <button onclick="closeActivityModal()" class="text-jpSecondary hover:text-white p-1 text-lg"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <form id="activity-form" onsubmit="saveActivity(event)" class="space-y-3 text-xs">
+                    <input type="hidden" id="act-id">
+                    <input type="hidden" id="act-day">
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-jpSecondary block mb-1">活動類別</label>
+                            <select id="act-type" required class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                                <option value="Food">Food (美食)</option>
+                                <option value="Sightseeing">Sightseeing (景點)</option>
+                                <option value="Transport">Transport (交通)</option>
+                                <option value="Hotel">Hotel (住宿)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-jpSecondary block mb-1">開始時間</label>
+                            <input type="text" id="act-time" required placeholder="12:00" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-jpSecondary block mb-1">地點 / 活動名稱</label>
+                        <input type="text" id="act-name" required placeholder="例如 Shin-Shin 拉麵" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                    </div>
+
+                    <div>
+                        <label class="text-jpSecondary block mb-1">地址 (Address)</label>
+                        <input type="text" id="act-address" placeholder="福岡市中央區..." class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-jpSecondary block mb-1">MAPCODE</label>
+                            <input type="text" id="act-mapcode" placeholder="13 318..." class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white font-mono">
+                        </div>
+                        <div>
+                            <label class="text-jpSecondary block mb-1">電話 (TEL)</label>
+                            <input type="text" id="act-phone" placeholder="+81 92..." class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white font-mono">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-jpSecondary block mb-1">停留時間</label>
+                            <input type="text" id="act-duration" placeholder="1.5小時" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                        </div>
+                        <div>
+                            <label class="text-jpSecondary block mb-1">上一站交通時間</label>
+                            <input type="text" id="act-traveltime" placeholder="地鐵 10 分鐘" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" class="flex-1 py-3 bg-jpAccentGreen text-black font-bold rounded-2xl text-xs active:scale-98 transition-transform">儲存行程</button>
+                        <button type="button" onclick="closeActivityModal()" class="px-4 py-3 bg-white/10 rounded-2xl text-xs">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ADD WISHLIST MODAL -->
+        <div id="wishlist-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+            <div class="glass-modal w-full max-w-[420px] rounded-3xl p-5 border border-white/20 space-y-4">
+                <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                    <h3 class="text-lg font-bold font-english text-white">新增心水地點</h3>
+                    <button onclick="closeWishlistModal()" class="text-jpSecondary hover:text-white p-1 text-lg"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <form onsubmit="saveWishlist(event)" class="space-y-3 text-xs">
+                    <div>
+                        <label class="text-jpSecondary block mb-1">地點 / 餐廳名稱</label>
+                        <input type="text" id="wish-name" required placeholder="例如 博多一雙拉麵 / 太宰府天滿宮" oninput="detectAreaFromName(this.value)" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-jpSecondary block mb-1">類別</label>
+                            <select id="wish-cat" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                                <option value="Food">Food (美食)</option>
+                                <option value="Sightseeing">Sightseeing (景點)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-jpSecondary block">地區 (Area)</label>
+                                <span id="auto-detect-badge" class="hidden text-[9px] text-jpAccentGreen font-bold animate-pulse">✨ 已自動識別</span>
+                            </div>
+                            <input type="text" id="wish-area" required placeholder="博多 / 天神 / 中洲" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-jpSecondary block mb-1">備註 / 特色</label>
+                        <input type="text" id="wish-notes" placeholder="極濃郁泡沫系豚骨拉麵" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" class="flex-1 py-3 bg-jpAccentGreen text-black font-bold rounded-2xl text-xs active:scale-98 transition-transform">儲存至心水清單</button>
+                        <button type="button" onclick="closeWishlistModal()" class="px-4 py-3 bg-white/10 rounded-2xl text-xs">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ADD EXPENSE MODAL -->
+        <div id="expense-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+            <div class="glass-modal w-full max-w-[420px] rounded-3xl p-5 border border-white/20 space-y-4">
+                <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                    <h3 class="text-lg font-bold font-english text-white">新增旅程開支</h3>
+                    <button onclick="closeExpenseModal()" class="text-jpSecondary hover:text-white p-1 text-lg"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <form onsubmit="saveExpense(event)" class="space-y-3 text-xs">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-jpSecondary block mb-1">日期</label>
+                            <input type="date" id="exp-date" required class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                        </div>
+                        <div>
+                            <label class="text-jpSecondary block mb-1">類別</label>
+                            <select id="exp-cat" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                                <option value="Food">Food (餐飲)</option>
+                                <option value="Transport">Transport (交通)</option>
+                                <option value="Shopping">Shopping (購物)</option>
+                                <option value="Hotel">Hotel (住宿)</option>
+                                <option value="Other">Other (其他)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-jpSecondary block mb-1">金額</label>
+                            <input type="number" id="exp-amount" required placeholder="1000" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white font-mono">
+                        </div>
+                        <div>
+                            <label class="text-jpSecondary block mb-1">貨幣</label>
+                            <select id="exp-currency" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                                <option value="JPY">JPY (円)</option>
+                                <option value="HKD">HKD ($)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-jpSecondary block mb-1">項目備註</label>
+                        <input type="text" id="exp-notes" placeholder="Shin-Shin 拉麵晚餐" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                    </div>
+
+                    <div>
+                        <label class="text-jpSecondary block mb-1">收據 / 單據相片 (圖像將儲存於本地)</label>
+                        <input type="file" id="exp-image" accept="image/*" class="w-full text-xs text-jpSecondary file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-white/10 file:text-white">
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" class="flex-1 py-3 bg-jpAccentGreen text-black font-bold rounded-2xl text-xs active:scale-98 transition-transform">儲存開支</button>
+                        <button type="button" onclick="closeExpenseModal()" class="px-4 py-3 bg-white/10 rounded-2xl text-xs">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ADD TO BUY MODAL -->
+        <div id="tobuy-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+            <div class="glass-modal w-full max-w-[420px] rounded-3xl p-5 border border-white/20 space-y-4">
+                <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                    <h3 class="text-lg font-bold font-english text-white">新增購物項目</h3>
+                    <button onclick="closeToBuyModal()" class="text-jpSecondary hover:text-white p-1 text-lg"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <form onsubmit="saveToBuy(event)" class="space-y-3 text-xs">
+                    <div>
+                        <label class="text-jpSecondary block mb-1">物品名稱</label>
+                        <input type="text" id="buy-name" required placeholder="博多明太子仙貝" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                    </div>
+
+                    <div>
+                        <label class="text-jpSecondary block mb-1">備註 / 購買數量</label>
+                        <input type="text" id="buy-notes" placeholder="買 3 盒給同事" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                    </div>
+
+                    <div>
+                        <label class="text-jpSecondary block mb-1">商品相片</label>
+                        <input type="file" id="buy-image" accept="image/*" class="w-full text-xs text-jpSecondary file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-white/10 file:text-white">
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" class="flex-1 py-3 bg-jpAccentPink text-black font-bold rounded-2xl text-xs active:scale-98 transition-transform">新增至購物清單</button>
+                        <button type="button" onclick="closeToBuyModal()" class="px-4 py-3 bg-white/10 rounded-2xl text-xs">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- EDIT TRIP DETAILS MODAL -->
+        <div id="trip-edit-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+            <div class="glass-modal w-full max-w-[420px] rounded-3xl p-5 border border-white/20 space-y-3 max-h-[90vh] overflow-y-auto no-scrollbar">
+                <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                    <h3 class="text-lg font-bold font-english text-white">編輯行程概覽與機酒資料</h3>
+                    <button onclick="closeTripEditModal()" class="text-jpSecondary hover:text-white p-1 text-lg"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <form onsubmit="saveTripInfo(event)" class="space-y-3 text-xs">
+                    <div>
+                        <label class="text-jpSecondary block mb-1">行程標題 (例如 HKG ✈ FUK)</label>
+                        <input type="text" id="trip-input-title" required class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-jpSecondary block mb-1">預訂參考號 (PNR)</label>
+                            <input type="text" id="trip-input-ref" required class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white uppercase font-mono">
+                        </div>
+                        <div>
+                            <label class="text-jpSecondary block mb-1">日期範圍</label>
+                            <input type="text" id="trip-input-dates" required placeholder="2027/01/07 - 01/11" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-white/10 pt-2 space-y-2">
+                        <h4 class="text-xs font-bold text-jpAccentGreen">去程航班 (Outbound)</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="trip-input-out-code" placeholder="UO668" class="bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                            <input type="text" id="trip-input-out-date" placeholder="7 JAN 2027" class="bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                            <input type="text" id="trip-input-out-time" placeholder="11:05 HKG" class="bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                            <input type="text" id="trip-input-out-arr" placeholder="➔ 15:10 FUK" class="bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-white/10 pt-2 space-y-2">
+                        <h4 class="text-xs font-bold text-jpAccentPink">回程航班 (Inbound)</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="trip-input-in-code" placeholder="UO601" class="bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                            <input type="text" id="trip-input-in-date" placeholder="11 JAN 2027" class="bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                            <input type="text" id="trip-input-in-time" placeholder="12:50 FUK" class="bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                            <input type="text" id="trip-input-in-arr" placeholder="➔ 15:50 HKG" class="bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-white/10 pt-2 space-y-2">
+                        <h4 class="text-xs font-bold text-white">住宿資訊 (Hotel)</h4>
+                        <input type="text" id="trip-input-hotel-name" placeholder="Mitsui Garden Hotel Fukuoka Nakasu" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                        <input type="text" id="trip-input-hotel-sub" placeholder="三井ガーデンホテル福岡中洲" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                        <input type="text" id="trip-input-hotel-addr" placeholder="5-5-1 Nakasu, Hakata-ku, Fukuoka" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="trip-input-hotel-phone" placeholder="+81 92-263-5531" class="bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                            <input type="text" id="trip-input-hotel-checkin" placeholder="7 Jan 2027 (15:00)" class="bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" class="flex-1 py-3 bg-jpAccentGreen text-black font-bold rounded-2xl text-xs active:scale-98 transition-transform">儲存總覽修改</button>
+                        <button type="button" onclick="closeTripEditModal()" class="px-4 py-3 bg-white/10 rounded-2xl text-xs">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- PROFILE EDIT MODAL -->
+        <div id="profile-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+            <div class="glass-modal w-full max-w-[420px] rounded-3xl p-5 border border-white/20 space-y-4">
+                <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                    <h3 class="text-lg font-bold font-english text-white">旅人個人檔案 (Profile)</h3>
+                    <button onclick="closeProfileModal()" class="text-jpSecondary hover:text-white p-1 text-lg"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <form onsubmit="saveProfile(event)" class="space-y-3 text-xs">
+                    <div class="flex flex-col items-center justify-center space-y-2">
+                        <div class="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-jpAccentGreen to-jpAccentPink relative overflow-hidden">
+                            <img id="modal-avatar-preview" src="https://placehold.co/100x100/1e1e23/FFFFFF?text=FUK" class="w-full h-full rounded-full object-cover bg-black" alt="Preview">
+                        </div>
+                        <label class="cursor-pointer px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs text-jpAccentGreen border border-jpAccentGreen/30">
+                            <i class="fa-solid fa-upload mr-1"></i> 上傳相片頭像
+                            <input type="file" id="profile-input-file" accept="image/*" class="hidden" onchange="previewAvatar(event)">
+                        </label>
+                    </div>
+
+                    <div>
+                        <label class="text-jpSecondary block mb-1">名稱 / 暱稱</label>
+                        <input type="text" id="profile-input-name" required placeholder="Alex" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                    </div>
+
+                    <div>
+                        <label class="text-jpSecondary block mb-1">旅人狀態</label>
+                        <input type="text" id="profile-input-status" placeholder="Exploring Fukuoka 🍜" class="w-full bg-black/60 border border-white/20 rounded-2xl p-2.5 text-white">
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" class="flex-1 py-3 bg-jpAccentPink text-black font-bold rounded-2xl text-xs active:scale-98 transition-transform">儲存個人檔案</button>
+                        <button type="button" onclick="closeProfileModal()" class="px-4 py-3 bg-white/10 rounded-2xl text-xs">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TOAST / NOTIFICATION -->
+        <div id="toast-msg" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-jpAccentGreen text-black font-bold text-xs rounded-full shadow-lg opacity-0 transition-opacity pointer-events-none">
+            Notification
+        </div>
+    </div>
+
+    <!-- MAIN APP JAVASCRIPT LOGIC -->
+    <script>
+        const defaultTripInfo = {
+            title: "HKG ✈ FUK",
+            ref: "P8T3GZ",
+            dates: "2027/01/07 - 01/11",
+            outbound: { code: "OUTBOUND: UO668", date: "7 JAN 2027", time: "11:05 HKG", arr: "➔ 15:10 FUK" },
+            inbound: { code: "INBOUND: UO601", date: "11 JAN 2027", time: "12:50 FUK", arr: "➔ 15:50 HKG" },
+            hotel: {
+                name: "Mitsui Garden Hotel Fukuoka Nakasu",
+                subname: "三井ガーデンホテル福岡中洲",
+                address: "5-5-1 Nakasu, Hakata-ku, Fukuoka 810-0801 Japan",
+                phone: "+81 92-263-5531",
+                checkin: "7 Jan 2027 (15:00)",
+                checkout: "11 Jan 2027 (11:00)"
+            }
+        };
+
+        const defaultProfile = {
+            name: "Alex",
+            status: "Exploring Fukuoka 🍜",
+            avatar: "https://placehold.co/100x100/1e1e23/FFFFFF?text=FUK"
+        };
+
+        const defaultScheduleData = {
+            1: [
+                { id: 'act-1', type: 'Transport', time: '11:05', name: '香港國際機場起飛 (UO668)', address: 'Hong Kong International Airport (HKG)', mapcode: '--', phone: '--', duration: '3小時05分', travelTime: '香港出發', notes: '起飛前20分鐘登機閘口關閉' },
+                { id: 'act-2', type: 'Transport', time: '15:10', name: '抵達福岡機場 (FUK)', address: '778-1 Shimousui, Hakata Ward, Fukuoka', mapcode: '13 323 114*47', phone: '+81 92-621-6059', duration: '45分鐘', travelTime: 'UO668 航班', notes: '乘地鐵機場線往中洲川端' },
+                { id: 'act-3', type: 'Hotel', time: '16:30', name: '辦理入住: Mitsui Garden Hotel Fukuoka Nakasu', address: '5-5-1 Nakasu, Hakata-ku, Fukuoka', mapcode: '13 318 456*12', phone: '+81 92-263-5531', duration: '30分鐘', travelTime: '地鐵 15 分鐘', notes: '預訂參考號: P8T3GZ' },
+                { id: 'act-4', type: 'Food', time: '18:00', name: '晚餐: 博多ラーメン Shin-Shin 中洲店', address: '3-2-19 Tenjin, Chuo Ward, Fukuoka', mapcode: '13 318 201*88', phone: '+81 92-732-4006', duration: '1小時', travelTime: '步行 5 分鐘', notes: '福岡極具人氣細麵豚骨拉麵' }
+            ],
+            2: [
+                { id: 'act-5', type: 'Sightseeing', time: '09:30', name: '大濠公園 & 日本庭園散策', address: '1-2 Ohorikoen, Chuo Ward, Fukuoka', mapcode: '13 314 621*05', phone: '+81 92-741-2004', duration: '2小時', travelTime: '地鐵 10 分鐘', notes: '湖畔優美景色及日式庭園' },
+                { id: 'act-6', type: 'Food', time: '12:30', name: '午餐: 元祖長浜屋拉麵', address: '2-5-38 Nagahama, Chuo Ward, Fukuoka', mapcode: '13 344 112*33', phone: '+81 92-711-8154', duration: '1小時', travelTime: '步行 15 分鐘', notes: '傳統元祖長浜豚骨風味' },
+                { id: 'act-7', type: 'Sightseeing', time: '14:30', name: '福岡塔 & 百道濱海濱公園', address: '2-3-26 Momochihama, Sawara Ward', mapcode: '13 310 882*44', phone: '+81 92-823-0234', duration: '2.5小時', travelTime: '巴士 20 分鐘', notes: '欣賞博多灣日落餘暉' }
+            ],
+            3: [
+                { id: 'act-8', type: 'Sightseeing', time: '09:00', name: '太宰府天滿宮參拜', address: '4-7-1 Saifu, Dazaifu, Fukuoka', mapcode: '55 364 122*00', phone: '+81 92-922-8225', duration: '3小時', travelTime: '西鐵電車 40 分鐘', notes: '參觀建築大師隈研吾設計星巴克' },
+                { id: 'act-9', type: 'Food', time: '13:00', name: '太宰府參道名物: 梅枝餅與午餐', address: 'Dazaifu Sando Street', mapcode: '--', phone: '--', duration: '1.5小時', travelTime: '步行', notes: '現烤香甜梅枝餅' }
+            ],
+            4: [
+                { id: 'act-10', type: 'Sightseeing', time: '10:30', name: '博多運河城 Canal City Shopping', address: '1-2 Sumiyoshi, Hakata Ward, Fukuoka', mapcode: '13 318 090*11', phone: '+81 92-282-2525', duration: '3小時', travelTime: '步行 10 分鐘', notes: '整點大型音樂水舞表演' },
+                { id: 'act-11', type: 'Food', time: '19:00', name: '中洲屋台街美食體驗', address: 'Nakasu, Hakata Ward, Fukuoka', mapcode: '13 318 333*02', phone: '--', duration: '2小時', travelTime: '步行 5 分鐘', notes: '河畔品嚐串燒與一口餃子' }
+            ],
+            5: [
+                { id: 'act-12', type: 'Hotel', time: '10:00', name: '辦理退房 Mitsui Garden Hotel', address: '5-5-1 Nakasu, Hakata-ku, Fukuoka', mapcode: '13 318 456*12', phone: '+81 92-263-5531', duration: '15分鐘', travelTime: '--', notes: '檢查行李及隨身物品' },
+                { id: 'act-13', type: 'Transport', time: '12:50', name: '福岡機場返港航班 (UO601)', address: 'Fukuoka Airport International Terminal', mapcode: '13 323 114*47', phone: '+81 92-621-6059', duration: '3小時', travelTime: '計程車 20 分鐘', notes: '預計 15:50 抵達香港 (HKG)' }
+            ]
+        };
+
+        const defaultWishlist = [
+            { id: 'w-1', category: 'Food', name: '博多一雙拉麵 (Hakata Issou)', area: '博多', notes: '極濃郁「泡沫系」豚骨拉麵' },
+            { id: 'w-2', category: 'Food', name: '牛腸鍋 大山 (Motsunabe Ooyama)', area: '天神', notes: '博多道地牛腸鍋名店' },
+            { id: 'w-3', category: 'Sightseeing', name: '櫛田神社 (Kushida Shrine)', area: '博多', notes: '博多祇園山笠祭典總鎮守' },
+            { id: 'w-4', category: 'Sightseeing', name: 'teamLab Forest Fukuoka', area: '地行濱', notes: '互動式數位藝術美術館' },
+            { id: 'w-5', category: 'Food', name: '吉塚鰻魚屋 (Yoshizuka Unagi)', area: '中洲', notes: '百年歷史經典鰻魚飯老店' }
+        ];
+
+        const defaultExpenseData = [
+            { id: 'exp-1', date: '2027-01-07', category: 'Transport', amount: 1500, currency: 'JPY', notes: '機場地鐵往中洲川端', image: null },
+            { id: 'exp-2', date: '2027-01-07', category: 'Food', amount: 2400, currency: 'JPY', notes: 'Shin-Shin 拉麵晚餐', image: null }
+        ];
+
+        const defaultToBuyData = [
+            { id: 'buy-1', name: '博多明太子仙貝', notes: '買 3 盒給同事', image: null, done: false },
+            { id: 'buy-2', name: '一蘭拉麵伴手禮盒', notes: '機場免稅店買', image: null, done: true }
+        ];
+
+        // Fukuoka & Kyushu Area Recognition Database
+        const fukuokaAreaDatabase = [
+            { area: "博多", keywords: ["博多", "hakata", "博多站", "博多駅", "一雙", "一幸舍", "博多運河城"] },
+            { area: "天神", keywords: ["天神", "tenjin", "大名", "daimyo", "新天町", "地下街", "shin-shin", "shinshin", "岩田屋", "parco"] },
+            { area: "中洲", keywords: ["中洲", "nakasu", "川端", "kawabata", "屋台", "吉塚", "三井", "mitsui"] },
+            { area: "藥院", keywords: ["藥院", "薬院", "yakuin", "渡邊通", "watanabe"] },
+            { area: "春吉", keywords: ["春吉", "haruyoshi"] },
+            { area: "祇園", keywords: ["祇園", "gion", "櫛田神社", "東平尾"] },
+            { area: "大濠公園", keywords: ["大濠", "ohori", "舞鶴公園", "福岡城"] },
+            { area: "百道濱", keywords: ["百道", "momochi", "福岡塔", "fukuoka tower", "百道濱", "福岡巨蛋", "paypay"] },
+            { area: "西新", keywords: ["西新", "nishijin", "藤崎"] },
+            { area: "地行濱", keywords: ["地行", "teamlab", "boss e-zo"] },
+            { area: "太宰府", keywords: ["太宰府", "dazaifu", "天滿宮", "梅枝餅", "九州國立博物館"] },
+            { area: "絲島", keywords: ["絲島", "糸島", "itoshima", "夫婦岩", "櫻井神社"] },
+            { area: "柳川", keywords: ["柳川", "yanagawa", "蒸鰻魚"] },
+            { area: "由布院", keywords: ["由布院", "湯布院", "yufuin", "金鱗湖"] },
+            { area: "門司港", keywords: ["門司", "moji", "唐戶市場", "下關"] },
+            { area: "福岡機場", keywords: ["機場", "airport", "fuk", "免稅店"] }
+        ];
+
+        // Global State variables
+        let tripInfo = JSON.parse(localStorage.getItem('fuk_trip_info')) || defaultTripInfo;
+        let userProfile = JSON.parse(localStorage.getItem('fuk_user_profile')) || defaultProfile;
+        let scheduleData = JSON.parse(localStorage.getItem('fuk_schedule')) || defaultScheduleData;
+        let wishlistData = JSON.parse(localStorage.getItem('fuk_wishlist')) || defaultWishlist;
+        let expenseData = JSON.parse(localStorage.getItem('fuk_expense')) || defaultExpenseData;
+        let toBuyData = JSON.parse(localStorage.getItem('fuk_tobuy')) || defaultToBuyData;
+        let activeDay = 1;
+        let roomCode = localStorage.getItem('fuk_room_code') || (new URLSearchParams(window.location.search).get('room')) || 'FUK-2027';
+        let appSettings = JSON.parse(localStorage.getItem('fuk_app_settings')) || { bgColor: '#000000', opacity: '0.75', isLight: false, wallpaper: null };
+        let db = null;
+        let auth = null;
+        let unsubscribeLiveListener = null;
+        let hasPendingOfflineChanges = localStorage.getItem('fuk_pending_offline_sync') === 'true';
+
+        // --- Render UI Functions ---
+        function renderTripHeaderAndInfo() {
+            document.getElementById('header-trip-title').innerHTML = `${tripInfo.title.replace('✈', '<i class="fa-solid font-sans text-xs text-jpSecondary mx-1">✈</i>')}`;
+            document.getElementById('header-booking-ref').innerText = `REF: ${tripInfo.ref}`;
+            document.getElementById('header-date-range').innerText = tripInfo.dates;
+
+            document.getElementById('card-outbound-code').innerText = tripInfo.outbound.code;
+            document.getElementById('card-outbound-date').innerText = tripInfo.outbound.date;
+            document.getElementById('card-outbound-time').innerHTML = `${tripInfo.outbound.time.split(' ')[0]} <span class="text-xs font-normal text-jpSecondary">${tripInfo.outbound.time.split(' ')[1] || 'HKG'}</span>`;
+            document.getElementById('card-outbound-arr').innerText = tripInfo.outbound.arr;
+
+            document.getElementById('card-inbound-code').innerText = tripInfo.inbound.code;
+            document.getElementById('card-inbound-date').innerText = tripInfo.inbound.date;
+            document.getElementById('card-inbound-time').innerHTML = `${tripInfo.inbound.time.split(' ')[0]} <span class="text-xs font-normal text-jpSecondary">${tripInfo.inbound.time.split(' ')[1] || 'FUK'}</span>`;
+            document.getElementById('card-inbound-arr').innerText = tripInfo.inbound.arr;
+
+            document.getElementById('hotel-tab-name').innerText = tripInfo.hotel.name;
+            document.getElementById('hotel-tab-subname').innerText = tripInfo.hotel.subname;
+            document.getElementById('hotel-tab-ref').innerText = tripInfo.ref;
+            document.getElementById('hotel-tab-phone').innerText = tripInfo.hotel.phone;
+            document.getElementById('hotel-tab-checkin').innerText = tripInfo.hotel.checkin;
+            document.getElementById('hotel-tab-checkout').innerText = tripInfo.hotel.checkout;
+            document.getElementById('hotel-tab-address').innerText = tripInfo.hotel.address;
+            document.getElementById('hotel-tab-map-link').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tripInfo.hotel.name)}`;
+            document.getElementById('hotel-tab-phone-link').href = `tel:${tripInfo.hotel.phone.replace(/[^0-9+]/g, '')}`;
+            document.getElementById('hotel-tab-copy-btn').onclick = () => copyToClipboard(tripInfo.hotel.address);
+        }
+
+        function applyAppSettings() {
+            const container = document.getElementById('app-container');
+            const body = document.body;
+            
+            if (appSettings.wallpaper) {
+                body.style.backgroundImage = `url('${appSettings.wallpaper}')`;
+                body.style.backgroundSize = 'cover';
+                body.style.backgroundPosition = 'center';
+                body.style.backgroundAttachment = 'fixed';
+                container.style.backgroundColor = 'transparent';
+            } else {
+                body.style.backgroundImage = 'none';
+                body.style.backgroundColor = appSettings.bgColor;
+                container.style.backgroundColor = appSettings.bgColor;
+            }
+            
+            if (appSettings.isLight) {
+                body.classList.remove('dark');
+                container.classList.remove('text-white');
+                container.classList.add('text-neutral-900');
+            } else {
+                body.classList.add('dark');
+                container.classList.remove('text-neutral-900');
+                container.classList.add('text-white');
+            }
+
+            // Update CSS custom property for glass card opacity
+            const alpha = appSettings.opacity;
+            const cardBg = appSettings.isLight ? `rgba(255, 255, 255, ${alpha})` : `rgba(30, 30, 35, ${alpha})`;
+            const panelBg = appSettings.isLight ? `rgba(240, 240, 245, ${alpha})` : `rgba(22, 22, 26, ${alpha})`;
+
+            document.querySelectorAll('.glass-card').forEach(el => {
+                el.style.background = cardBg;
+            });
+            document.querySelectorAll('.glass-panel').forEach(el => {
+                el.style.background = panelBg;
+            });
+
+            document.getElementById('opacity-slider').value = Math.round(Number(alpha) * 100);
+            document.getElementById('opacity-val-label').innerText = `${Math.round(Number(alpha) * 100)}%`;
+        }
+
+        function setThemeBackground(color, mode) {
+            appSettings.bgColor = color;
+            appSettings.wallpaper = null; // Clear custom wallpaper if picking solid color
+            appSettings.isLight = (mode === 'light');
+            localStorage.setItem('fuk_app_settings', JSON.stringify(appSettings));
+            applyAppSettings();
+            pushCloudSync();
+            showToast("背景主題已更新！");
+        }
+
+        async function uploadCustomWallpaper(e) {
+            if (e.target.files && e.target.files[0]) {
+                const base64 = await convertBase64(e.target.files[0]);
+                appSettings.wallpaper = base64;
+                localStorage.setItem('fuk_app_settings', JSON.stringify(appSettings));
+                applyAppSettings();
+                pushCloudSync();
+                showToast("自定義桌布已套用！");
+            }
+        }
+
+        function updateGlassOpacity(val) {
+            const decimal = (Number(val) / 100).toFixed(2);
+            appSettings.opacity = decimal;
+            localStorage.setItem('fuk_app_settings', JSON.stringify(appSettings));
+            applyAppSettings();
+        }
+
+        function renderProfile() {
+            document.getElementById('header-avatar-img').src = userProfile.avatar;
+            document.getElementById('settings-avatar-img').src = userProfile.avatar;
+            document.getElementById('modal-avatar-preview').src = userProfile.avatar;
+            document.getElementById('settings-user-name').innerText = userProfile.name;
+            document.getElementById('settings-user-status').innerText = userProfile.status;
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('text-jpAccentGreen');
+                el.classList.add('text-jpSecondary');
+            });
+            
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) targetTab.classList.add('active');
+            
+            const targetNav = document.getElementById(`nav-${tabId}`);
+            if (targetNav) {
+                targetNav.classList.remove('text-jpSecondary');
+                targetNav.classList.add('text-jpAccentGreen');
+            }
+
+            const fab = document.getElementById('schedule-fab');
+            if (fab) {
+                if (tabId === 'schedule') fab.classList.remove('hidden');
+                else fab.classList.add('hidden');
+            }
+        }
+
+        function switchDay(dayNum) {
+            activeDay = dayNum;
+            document.querySelectorAll('.day-btn').forEach((btn, idx) => {
+                if (idx + 1 === dayNum) {
+                    btn.className = "day-btn flex-1 min-w-[75px] py-2.5 px-3 rounded-2xl glass-card text-center transition-all border border-jpAccentGreen text-jpAccentGreen font-bold";
+                } else {
+                    btn.className = "day-btn flex-1 min-w-[75px] py-2.5 px-3 rounded-2xl glass-card text-center transition-all opacity-60 hover:opacity-100";
+                }
+            });
+            document.getElementById('current-day-label').innerHTML = `<i class="fa-solid fa-calendar-day mr-1 text-jpAccentGreen"></i> Day ${dayNum} 行程明細`;
+            renderSchedule();
+        }
+
+        function renderSchedule() {
+            const container = document.getElementById('timeline-container');
+            const items = scheduleData[activeDay] || [];
+            
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="glass-card rounded-3xl p-8 text-center text-jpSecondary space-y-2">
+                        <i class="fa-solid fa-calendar-plus text-3xl text-jpAccentGreen opacity-50 mb-2"></i>
+                        <p class="text-sm">本日尚無行程活動</p>
+                        <p class="text-xs opacity-60">點擊下方「+」按鈕新增景點、美食或交通</p>
+                    </div>`;
+            } else {
+                container.innerHTML = items.map((item) => {
+                    let badgeClass = 'bg-white/10 text-white';
+                    let iconClass = 'fa-location-dot';
+
+                    if (item.type === 'Food') { badgeClass = 'bg-jpAccentPink/10 border border-jpAccentPink/30 text-jpAccentPink'; iconClass = 'fa-utensils'; }
+                    else if (item.type === 'Sightseeing') { badgeClass = 'bg-jpAccentGreen/10 border border-jpAccentGreen/30 text-jpAccentGreen'; iconClass = 'fa-camera'; }
+                    else if (item.type === 'Transport') { badgeClass = 'bg-sky-500/10 border border-sky-500/30 text-sky-400'; iconClass = 'fa-plane'; }
+                    else if (item.type === 'Hotel') { badgeClass = 'bg-amber-500/10 border border-amber-500/30 text-amber-400'; iconClass = 'fa-hotel'; }
+
+                    return `
+                        <div data-id="${item.id}" class="activity-card glass-card rounded-3xl p-4 border border-white/10 relative space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${badgeClass}">
+                                        <i class="fa-solid ${iconClass} mr-1"></i>${item.type}
+                                    </span>
+                                    <span class="text-xs font-mono font-semibold text-jpSecondary">${item.time}</span>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <button onclick="duplicateActivity('${item.id}')" class="p-1.5 text-jpSecondary hover:text-white text-xs" title="複製"><i class="fa-solid fa-copy"></i></button>
+                                    <button onclick="openActivityModal('${item.id}')" class="p-1.5 text-jpSecondary hover:text-jpAccentGreen text-xs" title="編輯"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="deleteActivity('${item.id}')" class="p-1.5 text-jpSecondary hover:text-red-400 text-xs" title="刪除"><i class="fa-solid fa-trash-can"></i></button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-base font-bold text-white">${item.name}</h3>
+                                ${item.address ? `<p class="text-xs text-jpSecondary mt-0.5"><i class="fa-solid fa-location-dot mr-1"></i>${item.address}</p>` : ''}
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 text-[11px] bg-black/40 p-2.5 rounded-2xl border border-white/5 font-mono">
+                                <div><span class="text-jpSecondary block text-[9px]">MAPCODE</span>${item.mapcode || '--'}</div>
+                                <div><span class="text-jpSecondary block text-[9px]">PHONE</span>${item.phone || '--'}</div>
+                                <div><span class="text-jpSecondary block text-[9px]">停留時間</span>${item.duration || '--'}</div>
+                                <div><span class="text-jpSecondary block text-[9px]">上一站交通</span>${item.travelTime || '--'}</div>
+                            </div>
+
+                            ${item.notes ? `<p class="text-xs bg-white/5 p-2 rounded-xl text-jpSecondary italic"><i class="fa-solid fa-note-sticky text-jpAccentGreen mr-1.5"></i>${item.notes}</p>` : ''}
+
+                            <div class="pt-1 flex gap-2">
+                                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' ' + (item.address || ''))}" target="_blank" class="flex-1 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-xs font-medium text-center flex items-center justify-center gap-1 text-jpAccentGreen">
+                                    <i class="fa-solid fa-map-location-dot"></i> Google Maps
+                                </a>
+                            </div>
+                        </div>`;
+                }).join('');
+            }
+
+            renderNearbyWishlistSuggestions();
+        }
+
+        function renderNearbyWishlistSuggestions() {
+            const container = document.getElementById('nearby-wishlist-dropdown');
+            const dayActivities = scheduleData[activeDay] || [];
+            
+            // Extract keywords or addresses from current day's activities
+            const activeAreas = new Set();
+            dayActivities.forEach(act => {
+                const combined = (act.name + ' ' + act.address).toLowerCase();
+                fukuokaAreaDatabase.forEach(entry => {
+                    if (entry.keywords.some(kw => combined.includes(kw.toLowerCase()))) {
+                        activeAreas.add(entry.area);
+                    }
+                });
+            });
+
+            const nearbyWishlist = wishlistData.filter(item => activeAreas.has(item.area));
+
+            if (nearbyWishlist.length === 0) {
+                container.innerHTML = `<p class="text-xs text-jpSecondary py-2 text-center">今天行程暫無相符區域的心水推薦（或已全部加入行程）</p>`;
+            } else {
+                container.innerHTML = nearbyWishlist.map(w => `
+                    <div class="flex justify-between items-center p-2 bg-black/40 rounded-xl border border-white/5 text-xs">
+                        <div>
+                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full ${w.category === 'Food' ? 'bg-jpAccentPink/20 text-jpAccentPink' : 'bg-jpAccentGreen/20 text-jpAccentGreen'} mr-1">${w.category}</span>
+                            <span class="font-bold text-white">${w.name}</span>
+                            <span class="text-[10px] text-jpSecondary ml-1">(${w.area})</span>
+                        </div>
+                        <button onclick="addWishToSchedule('${w.id}')" class="px-2.5 py-1 bg-jpAccentGreen text-black font-bold rounded-lg text-[10px] hover:scale-105 active:scale-95 transition-transform">
+                            + 加至今日
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function toggleNearbyDropdown() {
+            const dropdown = document.getElementById('nearby-wishlist-dropdown');
+            const icon = document.getElementById('nearby-toggle-icon');
+            dropdown.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        function addWishToSchedule(wishId) {
+            const wish = wishlistData.find(w => w.id === wishId);
+            if (!wish) return;
+
+            if (!scheduleData[activeDay]) scheduleData[activeDay] = [];
+            
+            const newActivity = {
+                id: 'act-' + Date.now(),
+                type: wish.category,
+                time: '12:00',
+                name: wish.name,
+                address: wish.area + ' 區',
+                mapcode: '--',
+                phone: '--',
+                duration: '1小時',
+                travelTime: '待定',
+                notes: wish.notes || ''
+            };
+
+            scheduleData[activeDay].push(newActivity);
+            pushCloudSync();
+            renderSchedule();
+            showToast(`已將「${wish.name}」加入 Day ${activeDay} 行程！`);
+        }
+
+        function renderWishlist() {
+            const container = document.getElementById('wishlist-grouped-container');
+            if (wishlistData.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-jpSecondary py-8">尚無心水地點，點擊右上角「+」新增</p>`;
+                return;
+            }
+
+            const grouped = {};
+            wishlistData.forEach(item => {
+                const area = item.area || '其他';
+                if (!grouped[area]) grouped[area] = [];
+                grouped[area].push(item);
+            });
+
+            container.innerHTML = Object.keys(grouped).map(area => `
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-jpAccentGreen uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-map-pin"></i> ${area} 區域 (${grouped[area].length})
+                    </h3>
+                    <div class="space-y-2">
+                        ${grouped[area].map(item => `
+                            <div class="glass-card rounded-2xl p-3 border border-white/10 flex justify-between items-center text-xs">
+                                <div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full ${item.category === 'Food' ? 'bg-jpAccentPink/20 text-jpAccentPink' : 'bg-jpAccentGreen/20 text-jpAccentGreen'}">${item.category}</span>
+                                        <h4 class="font-bold text-white">${item.name}</h4>
+                                    </div>
+                                    ${item.notes ? `<p class="text-[11px] text-jpSecondary mt-1">${item.notes}</p>` : ''}
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' ' + item.area)}" target="_blank" class="p-1.5 text-jpAccentGreen hover:text-white" title="Google Maps"><i class="fa-solid fa-map-location-dot"></i></a>
+                                    <button onclick="deleteWishlist('${item.id}')" class="p-1.5 text-jpSecondary hover:text-red-400"><i class="fa-solid fa-trash-can"></i></button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderToBuy() {
+            const container = document.getElementById('tobuy-list-container');
+            if (toBuyData.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-jpSecondary py-8">購物清單為空，點擊右上角「+」新增</p>`;
+                return;
+            }
+
+            container.innerHTML = toBuyData.map(item => `
+                <div class="glass-card rounded-2xl p-3.5 border border-white/10 flex items-center justify-between space-x-3 text-xs">
+                    <div class="flex items-center space-x-3 flex-1">
+                        <button onclick="toggleToBuyDone('${item.id}')" class="w-6 h-6 rounded-full border border-jpAccentPink/50 flex items-center justify-center ${item.done ? 'bg-jpAccentPink text-black' : 'text-transparent'}">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </button>
+                        ${item.image ? `<img src="${item.image}" class="w-12 h-12 rounded-xl object-cover bg-black" alt="${item.name}">` : ''}
+                        <div class="${item.done ? 'line-through opacity-50' : ''}">
+                            <h4 class="font-bold text-white">${item.name}</h4>
+                            ${item.notes ? `<p class="text-[11px] text-jpSecondary">${item.notes}</p>` : ''}
+                        </div>
+                    </div>
+                    <button onclick="deleteToBuy('${item.id}')" class="p-1.5 text-jpSecondary hover:text-red-400"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function renderExpenses() {
+            const container = document.getElementById('expense-list-container');
+            let totalHKD = 0;
+            let totalJPY = 0;
+
+            expenseData.forEach(exp => {
+                if (exp.currency === 'HKD') totalHKD += Number(exp.amount || 0);
+                else if (exp.currency === 'JPY') totalJPY += Number(exp.amount || 0);
+            });
+
+            document.getElementById('expense-total-hkd').innerText = `HK$ ${totalHKD.toLocaleString()}`;
+            document.getElementById('expense-total-jpy').innerText = `¥ ${totalJPY.toLocaleString()}`;
+
+            if (expenseData.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-jpSecondary py-8">尚無記帳紀錄，點擊右上角「+」新增</p>`;
+                return;
+            }
+
+            container.innerHTML = expenseData.map(exp => `
+                <div class="glass-card rounded-2xl p-3 border border-white/10 flex justify-between items-center text-xs">
+                    <div class="flex items-center space-x-3">
+                        ${exp.image ? `<img src="${exp.image}" onclick="viewImage('${exp.image}')" class="w-10 h-10 rounded-xl object-cover cursor-pointer" alt="Receipt">` : `<div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-jpSecondary"><i class="fa-solid fa-receipt"></i></div>`}
+                        <div>
+                            <span class="text-[9px] font-bold text-jpAccentGreen uppercase">${exp.category} • ${exp.date}</span>
+                            <h4 class="font-bold text-white">${exp.notes || exp.category}</h4>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-mono font-bold text-white ${exp.currency === 'HKD' ? 'text-jpAccentGreen' : 'text-jpAccentPink'}">${exp.currency === 'HKD' ? 'HK$' : '¥'} ${Number(exp.amount).toLocaleString()}</span>
+                        <button onclick="deleteExpense('${exp.id}')" class="p-1 text-jpSecondary hover:text-red-400"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- Modals & Actions ---
+        function openActivityModal(actId = null) {
+            const modal = document.getElementById('activity-modal');
+            const title = document.getElementById('modal-activity-title');
+            
+            if (actId) {
+                const act = scheduleData[activeDay].find(a => a.id === actId);
+                if (act) {
+                    title.innerText = "編輯行程活動";
+                    document.getElementById('act-id').value = act.id;
+                    document.getElementById('act-type').value = act.type;
+                    document.getElementById('act-time').value = act.time;
+                    document.getElementById('act-name').value = act.name;
+                    document.getElementById('act-address').value = act.address || '';
+                    document.getElementById('act-mapcode').value = act.mapcode || '';
+                    document.getElementById('act-phone').value = act.phone || '';
+                    document.getElementById('act-duration').value = act.duration || '';
+                    document.getElementById('act-traveltime').value = act.travelTime || '';
+                }
+            } else {
+                title.innerText = "新增行程活動";
+                document.getElementById('activity-form').reset();
+                document.getElementById('act-id').value = '';
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeActivityModal() { document.getElementById('activity-modal').classList.add('hidden'); }
+
+        function saveActivity(e) {
+            e.preventDefault();
+            const id = document.getElementById('act-id').value || 'act-' + Date.now();
+            const type = document.getElementById('act-type').value;
+            const time = document.getElementById('act-time').value;
+            const name = document.getElementById('act-name').value;
+            const address = document.getElementById('act-address').value;
+            const mapcode = document.getElementById('act-mapcode').value;
+            const phone = document.getElementById('act-phone').value;
+            const duration = document.getElementById('act-duration').value;
+            const travelTime = document.getElementById('act-traveltime').value;
+
+            if (!scheduleData[activeDay]) scheduleData[activeDay] = [];
+
+            const existingIdx = scheduleData[activeDay].findIndex(a => a.id === id);
+            const activityObj = { id, type, time, name, address, mapcode, phone, duration, travelTime };
+
+            if (existingIdx >= 0) {
+                scheduleData[activeDay][existingIdx] = activityObj;
+            } else {
+                scheduleData[activeDay].push(activityObj);
+            }
+
+            closeActivityModal();
+            pushCloudSync();
+            renderSchedule();
+            showToast("行程已更新！");
+        }
+
+        function deleteActivity(actId) {
+            if (!confirm("確定刪除此行程活動？")) return;
+            scheduleData[activeDay] = scheduleData[activeDay].filter(a => a.id !== actId);
+            pushCloudSync();
+            renderSchedule();
+            showToast("已刪除行程活動");
+        }
+
+        function duplicateActivity(actId) {
+            const act = scheduleData[activeDay].find(a => a.id === actId);
+            if (!act) return;
+            const dup = { ...act, id: 'act-' + Date.now(), name: act.name + ' (副本)' };
+            scheduleData[activeDay].push(dup);
+            pushCloudSync();
+            renderSchedule();
+            showToast("已複製行程活動");
+        }
+
+        function openWishlistModal() { document.getElementById('wishlist-modal').classList.remove('hidden'); }
+        function closeWishlistModal() { document.getElementById('wishlist-modal').classList.add('hidden'); }
+
+        function detectAreaFromName(val) {
+            const badge = document.getElementById('auto-detect-badge');
+            const areaInput = document.getElementById('wish-area');
+            const lowerVal = val.toLowerCase();
+
+            for (const entry of fukuokaAreaDatabase) {
+                if (entry.keywords.some(kw => lowerVal.includes(kw.toLowerCase()))) {
+                    areaInput.value = entry.area;
+                    badge.classList.remove('hidden');
+                    return;
+                }
+            }
+            badge.classList.add('hidden');
+        }
+
+        function saveWishlist(e) {
+            e.preventDefault();
+            const name = document.getElementById('wish-name').value;
+            const category = document.getElementById('wish-cat').value;
+            const area = document.getElementById('wish-area').value;
+            const notes = document.getElementById('wish-notes').value;
+
+            wishlistData.push({ id: 'w-' + Date.now(), category, name, area, notes });
+            closeWishlistModal();
+            pushCloudSync();
+            renderWishlist();
+            showToast("已新增至心水清單！");
+        }
+
+        function deleteWishlist(id) {
+            wishlistData = wishlistData.filter(w => w.id !== id);
+            pushCloudSync();
+            renderWishlist();
+            showToast("已刪除心水地點");
+        }
+
+        function openExpenseModal() { document.getElementById('expense-modal').classList.remove('hidden'); }
+        function closeExpenseModal() { document.getElementById('expense-modal').classList.add('hidden'); }
+
+        async function saveExpense(e) {
+            e.preventDefault();
+            const date = document.getElementById('exp-date').value;
+            const category = document.getElementById('exp-cat').value;
+            const amount = document.getElementById('exp-amount').value;
+            const currency = document.getElementById('exp-currency').value;
+            const notes = document.getElementById('exp-notes').value;
+            const fileInput = document.getElementById('exp-image');
+
+            let imageBase64 = null;
+            if (fileInput.files && fileInput.files[0]) {
+                imageBase64 = await convertBase64(fileInput.files[0]);
+            }
+
+            expenseData.push({ id: 'exp-' + Date.now(), date, category, amount, currency, notes, image: imageBase64 });
+            closeExpenseModal();
+            pushCloudSync();
+            renderExpenses();
+            showToast("已新增開支紀錄！");
+        }
+
+        function deleteExpense(id) {
+            expenseData = expenseData.filter(e => e.id !== id);
+            pushCloudSync();
+            renderExpenses();
+            showToast("已刪除開支紀錄");
+        }
+
+        function openToBuyModal() { document.getElementById('tobuy-modal').classList.remove('hidden'); }
+        function closeToBuyModal() { document.getElementById('tobuy-modal').classList.add('hidden'); }
+
+        async function saveToBuy(e) {
+            e.preventDefault();
+            const name = document.getElementById('buy-name').value;
+            const notes = document.getElementById('buy-notes').value;
+            const fileInput = document.getElementById('buy-image');
+
+            let imageBase64 = null;
+            if (fileInput.files && fileInput.files[0]) {
+                imageBase64 = await convertBase64(fileInput.files[0]);
+            }
+
+            toBuyData.push({ id: 'buy-' + Date.now(), name, notes, image: imageBase64, done: false });
+            closeToBuyModal();
+            pushCloudSync();
+            renderToBuy();
+            showToast("已新增購物項目！");
+        }
+
+        function toggleToBuyDone(id) {
+            const item = toBuyData.find(b => b.id === id);
+            if (item) {
+                item.done = !item.done;
+                pushCloudSync();
+                renderToBuy();
+            }
+        }
+
+        function deleteToBuy(id) {
+            toBuyData = toBuyData.filter(b => b.id !== id);
+            pushCloudSync();
+            renderToBuy();
+            showToast("已刪除購物項目");
+        }
+
+        function openTripEditModal() {
+            document.getElementById('trip-input-title').value = tripInfo.title;
+            document.getElementById('trip-input-ref').value = tripInfo.ref;
+            document.getElementById('trip-input-dates').value = tripInfo.dates;
+            document.getElementById('trip-input-out-code').value = tripInfo.outbound.code;
+            document.getElementById('trip-input-out-date').value = tripInfo.outbound.date;
+            document.getElementById('trip-input-out-time').value = tripInfo.outbound.time;
+            document.getElementById('trip-input-out-arr').value = tripInfo.outbound.arr;
+            document.getElementById('trip-input-in-code').value = tripInfo.inbound.code;
+            document.getElementById('trip-input-in-date').value = tripInfo.inbound.date;
+            document.getElementById('trip-input-in-time').value = tripInfo.inbound.time;
+            document.getElementById('trip-input-in-arr').value = tripInfo.inbound.arr;
+            document.getElementById('trip-input-hotel-name').value = tripInfo.hotel.name;
+            document.getElementById('trip-input-hotel-sub').value = tripInfo.hotel.subname;
+            document.getElementById('trip-input-hotel-addr').value = tripInfo.hotel.address;
+            document.getElementById('trip-input-hotel-phone').value = tripInfo.hotel.phone;
+            document.getElementById('trip-edit-modal').classList.remove('hidden');
+        }
+
+        function closeTripEditModal() { document.getElementById('trip-edit-modal').classList.add('hidden'); }
+
+        function saveTripInfo(e) {
+            e.preventDefault();
+            tripInfo.title = document.getElementById('trip-input-title').value;
+            tripInfo.ref = document.getElementById('trip-input-ref').value;
+            tripInfo.dates = document.getElementById('trip-input-dates').value;
+            tripInfo.outbound.code = document.getElementById('trip-input-out-code').value;
+            tripInfo.outbound.date = document.getElementById('trip-input-out-date').value;
+            tripInfo.outbound.time = document.getElementById('trip-input-out-time').value;
+            tripInfo.outbound.arr = document.getElementById('trip-input-out-arr').value;
+            tripInfo.inbound.code = document.getElementById('trip-input-in-code').value;
+            tripInfo.inbound.date = document.getElementById('trip-input-in-date').value;
+            tripInfo.inbound.time = document.getElementById('trip-input-in-time').value;
+            tripInfo.inbound.arr = document.getElementById('trip-input-in-arr').value;
+            tripInfo.hotel.name = document.getElementById('trip-input-hotel-name').value;
+            tripInfo.hotel.subname = document.getElementById('trip-input-hotel-sub').value;
+            tripInfo.hotel.address = document.getElementById('trip-input-hotel-addr').value;
+            tripInfo.hotel.phone = document.getElementById('trip-input-hotel-phone').value;
+
+            closeTripEditModal();
+            pushCloudSync();
+            renderTripHeaderAndInfo();
+            showToast("行程總覽及機酒資料已儲存！");
+        }
+
+        function openProfileModal() {
+            document.getElementById('profile-input-name').value = userProfile.name;
+            document.getElementById('profile-input-status').value = userProfile.status;
+            document.getElementById('modal-avatar-preview').src = userProfile.avatar;
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+
+        function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
+
+        async function previewAvatar(e) {
+            if (e.target.files && e.target.files[0]) {
+                userProfile.avatar = await convertBase64(e.target.files[0]);
+                document.getElementById('modal-avatar-preview').src = userProfile.avatar;
+            }
+        }
+
+        function saveProfile(e) {
+            e.preventDefault();
+            userProfile.name = document.getElementById('profile-input-name').value;
+            userProfile.status = document.getElementById('profile-input-status').value;
+            closeProfileModal();
+            pushCloudSync();
+            renderProfile();
+            showToast("個人檔案已更新！");
+        }
+
+        // --- Utilities ---
+        function copyToClipboard(text) {
+            const input = document.createElement('textarea');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            showToast("已成功複製至剪貼簿！");
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-msg');
+            toast.innerText = msg;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => toast.classList.add('opacity-0'), 2500);
+        }
+
+        function convertBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function initSortable() {
+            const container = document.getElementById('timeline-container');
+            if (container) {
+                new Sortable(container, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: function() {
+                        const newOrderIds = Array.from(container.children).map(el => el.getAttribute('data-id'));
+                        const currentDayItems = scheduleData[activeDay] || [];
+                        scheduleData[activeDay] = newOrderIds.map(id => currentDayItems.find(item => item.id === id)).filter(Boolean);
+                        pushCloudSync();
+                    }
+                });
+            }
+        }
+
+        async function fetchFukuokaWeather() {
+            try {
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=33.5902&longitude=130.4017&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo');
+                const data = await res.json();
+                
+                if (data && data.current_weather) {
+                    const temp = Math.round(data.current_weather.temperature);
+                    document.getElementById('header-weather-pill').innerHTML = `<i class="fa-solid fa-cloud-sun"></i> Fukuoka ${temp}°C`;
+                    
+                    document.getElementById('weather-current-box').innerHTML = `
+                        <div class="text-5xl font-black text-white font-mono mb-2">${temp}°C</div>
+                        <div class="text-xs text-jpAccentGreen">風速: ${data.current_weather.windspeed} km/h</div>
+                    `;
+
+                    if (data.daily) {
+                        const days = data.daily.time;
+                        const maxs = data.daily.temperature_2m_max;
+                        const mins = data.daily.temperature_2m_min;
+                        const rains = data.daily.precipitation_probability_max;
+
+                        document.getElementById('weather-forecast-list').innerHTML = days.map((dayStr, idx) => `
+                            <div class="flex justify-between items-center p-3 bg-black/40 rounded-2xl border border-white/5 text-xs font-mono">
+                                <span>${dayStr}</span>
+                                <span class="text-jpAccentGreen">${Math.round(mins[idx])}°C ~ ${Math.round(maxs[idx])}°C</span>
+                                <span class="text-jpAccentPink"><i class="fa-solid fa-umbrella mr-1"></i>${rains[idx] || 0}%</span>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch(e) {
+                console.error("Weather fetch failed:", e);
+            }
+        }
+
+        function exportData() {
+            const fullData = { tripInfo, userProfile, scheduleData, wishlistData, toBuyData, expenseData };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullData));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `FukTrip_Backup_${roomCode}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importData(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.tripInfo) tripInfo = imported.tripInfo;
+                    if (imported.userProfile) userProfile = imported.userProfile;
+                    if (imported.scheduleData) scheduleData = imported.scheduleData;
+                    if (imported.wishlistData) wishlistData = imported.wishlistData;
+                    if (imported.toBuyData) toBuyData = imported.toBuyData;
+                    if (imported.expenseData) expenseData = imported.expenseData;
+
+                    pushCloudSync();
+                    location.reload();
+                } catch(err) {
+                    alert("JSON 格式不正確！");
+                }
+            };
+            fileReader.readAsText(event.target.files[0]);
+        }
+
+        function resetData() {
+            if (confirm("警告：確定重置所有行程與設定至預設狀態？")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function registerPWA() {
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    self.addEventListener('install', e => self.skipWaiting());
+                    self.addEventListener('activate', e => self.clients.claim());
+                    self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+                `;
+                const blob = new Blob([swCode], { type: 'text/javascript' });
+                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+            }
+        }
+
+        async function initFirebaseSync() {
+            try {
+                if (typeof window.FirebaseModule === 'undefined') {
+                    setTimeout(initFirebaseSync, 500);
+                    return;
+                }
+
+                const { initializeApp, getApps, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot } = window.FirebaseModule;
+
+                const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : localStorage.getItem('fuk_firebase_config');
+                let firebaseConfig = null;
+                if (configStr) {
+                    try { firebaseConfig = typeof configStr === 'string' ? JSON.parse(configStr) : configStr; } catch(e){}
+                }
+
+                if (!firebaseConfig) {
+                    console.warn("No Firebase configuration provided. Running in Local Storage mode.");
+                    updateSyncUIStatus(false, navigator.onLine ? "LOCAL" : "OFFLINE");
+                    return;
+                }
+
+                const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Check if returning online after offline edits
+                if (navigator.onLine) {
+                    if (hasPendingOfflineChanges) {
+                        updateSyncUIStatus(true, "SYNCING...");
+                        await pushCloudSync(true);
+                    } else {
+                        updateSyncUIStatus(true, "LIVE SYNC");
+                    }
+                } else {
+                    updateSyncUIStatus(false, "OFFLINE");
+                }
+
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'fukuoka-planner-app';
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'trips', roomCode);
+
+                if (unsubscribeLiveListener) unsubscribeLiveListener();
+
+                unsubscribeLiveListener = onSnapshot(docRef, (snapshot) => {
+                    // Do not overwrite local changes if we haven't flushed offline queue yet
+                    if (hasPendingOfflineChanges && !navigator.onLine) return;
+
+                    if (snapshot.exists()) {
+                        const data = snapshot.data();
+                        if (data.tripInfo) { tripInfo = data.tripInfo; localStorage.setItem('fuk_trip_info', JSON.stringify(tripInfo)); renderTripHeaderAndInfo(); }
+                        if (data.userProfile) { userProfile = data.userProfile; localStorage.setItem('fuk_user_profile', JSON.stringify(userProfile)); renderProfile(); }
+                        if (data.schedule) { scheduleData = data.schedule; localStorage.setItem('fuk_schedule', JSON.stringify(scheduleData)); }
+                        if (data.wishlist) { wishlistData = data.wishlist; localStorage.setItem('fuk_wishlist', JSON.stringify(wishlistData)); }
+                        if (data.tobuy) { toBuyData = data.tobuy; localStorage.setItem('fuk_tobuy', JSON.stringify(toBuyData)); }
+                        if (data.expense) { expenseData = data.expense; localStorage.setItem('fuk_expense', JSON.stringify(expenseData)); }
+
+                        renderSchedule();
+                        renderWishlist();
+                        renderToBuy();
+                        renderExpenses();
+
+                        if (navigator.onLine) {
+                            updateSyncUIStatus(true, "LIVE SYNC");
+                        }
+                    } else {
+                        pushCloudSync();
+                    }
+                }, (error) => {
+                    console.error("Firestore sync error:", error);
+                    updateSyncUIStatus(false, navigator.onLine ? "LOCAL" : "OFFLINE");
+                });
+
+            } catch (err) {
+                console.error("Failed to initialize Firebase Sync:", err);
+                updateSyncUIStatus(false, navigator.onLine ? "LOCAL" : "OFFLINE");
+            }
+        }
+
+        async function pushCloudSync(forceFlush = false) {
+            // Save to LocalStorage immediately for instant UI & offline resilience
+            localStorage.setItem('fuk_trip_info', JSON.stringify(tripInfo));
+            localStorage.setItem('fuk_user_profile', JSON.stringify(userProfile));
+            localStorage.setItem('fuk_schedule', JSON.stringify(scheduleData));
+            localStorage.setItem('fuk_wishlist', JSON.stringify(wishlistData));
+            localStorage.setItem('fuk_tobuy', JSON.stringify(toBuyData));
+            localStorage.setItem('fuk_expense', JSON.stringify(expenseData));
+
+            if (!navigator.onLine) {
+                hasPendingOfflineChanges = true;
+                localStorage.setItem('fuk_pending_offline_sync', 'true');
+                updateSyncUIStatus(false, "OFFLINE (QUEUED)");
+                return;
+            }
+
+            if (!db || !auth || !auth.currentUser) return;
+
+            try {
+                const { doc, setDoc } = window.FirebaseModule;
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'fukuoka-planner-app';
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'trips', roomCode);
+
+                await setDoc(docRef, {
+                    tripInfo: tripInfo,
+                    userProfile: userProfile,
+                    schedule: scheduleData,
+                    wishlist: wishlistData,
+                    tobuy: toBuyData,
+                    expense: expenseData,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: auth.currentUser.uid
+                }, { merge: true });
+
+                hasPendingOfflineChanges = false;
+                localStorage.removeItem('fuk_pending_offline_sync');
+                updateSyncUIStatus(true, "LIVE SYNC");
+
+            } catch (err) {
+                console.error("Cloud push failed:", err);
+                hasPendingOfflineChanges = true;
+                localStorage.setItem('fuk_pending_offline_sync', 'true');
+                updateSyncUIStatus(false, "SYNC QUEUED");
+            }
+        }
+
+        function updateSyncUIStatus(isOnline, text) {
+            const dot = document.getElementById('sync-status-dot');
+            const txt = document.getElementById('sync-status-text');
+            if (isOnline) {
+                dot.className = "inline-block w-2 h-2 rounded-full bg-jpAccentGreen animate-pulse";
+                txt.innerText = text;
+                txt.className = "text-[9px] font-mono text-jpAccentGreen uppercase";
+            } else {
+                dot.className = "inline-block w-2 h-2 rounded-full bg-amber-400";
+                txt.innerText = text;
+                txt.className = "text-[9px] font-mono text-amber-400 uppercase";
+            }
+        }
+
+        // Handle Online / Offline network status changes automatically
+        window.addEventListener('online', () => {
+            showToast("🌐 網路已恢復連線！正在自動同步資料...");
+            if (hasPendingOfflineChanges) {
+                pushCloudSync(true);
+            } else {
+                initFirebaseSync();
+            }
+        });
+
+        window.addEventListener('offline', () => {
+            showToast("📡 離線模式：編輯會先儲存在手機，恢復連線後自動同步。");
+            updateSyncUIStatus(false, "OFFLINE");
+        });
+
+        function changeRoomCode() {
+            const input = document.getElementById('input-room-code').value.trim().toUpperCase();
+            if (!input) return;
+            roomCode = input;
+            localStorage.setItem('fuk_room_code', roomCode);
+            showToast(`已切換至房間: ${roomCode}`);
+            initFirebaseSync();
+        }
+
+        function shareTripLink() {
+            const shareUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+            copyToClipboard(shareUrl);
+            showToast(`主畫面與共享連結 (Room: ${roomCode}) 已複製！`);
+        }
+
+        // Dynamically inject Web App Manifest with Room Code into document head
+        function setupDynamicPWAManifest() {
+            const currentRoomUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+            const manifestObj = {
+                name: "HKG ✈ FUK Travel Planner",
+                short_name: "FUK Planner",
+                start_url: currentRoomUrl,
+                display: "standalone",
+                background_color: "#000000",
+                theme_color: "#000000",
+                icons: [
+                    {
+                        src: "https://placehold.co/192x192/000000/39FF14?text=FUK",
+                        sizes: "192x192",
+                        type: "image/png"
+                    },
+                    {
+                        src: "https://placehold.co/512x512/000000/39FF14?text=FUK",
+                        sizes: "512x512",
+                        type: "image/png"
+                    }
+                ]
+            };
+
+            const stringManifest = JSON.stringify(manifestObj);
+            const blob = new Blob([stringManifest], { type: 'application/json' });
+            const manifestUrl = URL.createObjectURL(blob);
+            
+            let linkEl = document.querySelector('link[rel="manifest"]');
+            if (!linkEl) {
+                linkEl = document.createElement('link');
+                linkEl.rel = 'manifest';
+                document.head.appendChild(linkEl);
+            }
+            linkEl.href = manifestUrl;
+        }
+
+        // ... existing helper functions (switchTab, switchDay, etc.) ...
+
+        // Window Load Initializer
+        window.onload = function() {
+            setupDynamicPWAManifest();
+            applyAppSettings();
+            renderTripHeaderAndInfo();
+            renderProfile();
+            renderSchedule();
+            renderWishlist();
+            renderToBuy();
+            renderExpenses();
+            initSortable();
+            fetchFukuokaWeather();
+            registerPWA();
+
+            document.getElementById('input-room-code').value = roomCode;
+            initFirebaseSync();
+        };
+    </script>
+</body>
+</html>
